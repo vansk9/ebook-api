@@ -11,7 +11,7 @@ var Conn *pgxpool.Pool
 
 func ConnectDB() error {
 	var err error
-	dbUrl := os.Getenv("postgresql://postgres:miftah87@localhost:5432/ebook-api")
+	dbUrl := os.Getenv("DATABASE_URL") // ✅ AMBIL dari .env
 
 	Conn, err = pgxpool.New(context.Background(), dbUrl)
 	if err != nil {

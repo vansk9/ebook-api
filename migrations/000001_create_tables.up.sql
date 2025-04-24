@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE category (
     id INT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -46,9 +48,11 @@ CREATE TABLE order_details (
     deleted_at TIMESTAMP DEFAULT NULL
 );
 
-CREATE UNIQUE INDEX category_name ON category(name); -- Contoh "Science", "Fiction", "History" 
+
 CREATE UNIQUE INDEX ebook_name_per_category ON ebook(name, category_id); -- Nama ebook gaboleh sama di dalam satu kategori, tapi boleh sama di kategori lain. Contoh "Science" ada ebook "A", di kategori "Fiction" juga ada ebook "A"
 CREATE UNIQUE INDEX orderitem_per_order ON order_details(order_id, ebook_id); -- Satu order gaboleh ada ebook yang sama, kalo mau 2 pcs / quantity.
 
 CREATE INDEX order_user ON "order"(user_id); -- buat mempercepat pencarian user di tabel order
-CREATE INDEX email_user ON "user"(email); -- buat mempercepat pencarian user di tabel user
+CREATE UNIQUE INDEX email_user ON "user"(email); -- buat mempercepat pencarian user di tabel user
+
+COMMIT;
