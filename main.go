@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -14,36 +13,31 @@ import (
 )
 
 func main() {
-	// Load .env
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	// Cek env
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		log.Fatal("DATABASE_URL is not set in the environment variables")
-	}
-
-	// Connect to DB
 	if err := db.ConnectDB(); err != nil {
 		log.Fatal("failed to connect to database:", err)
 	}
 	defer db.Conn.Close()
 
-	// Dependency Injection
+	app := fiber.New()
+
 	userRepo := repository.NewUserRepository()
 	userService := service.NewUserService(userRepo)
 	userController := controller.NewUserController(userService)
 
-	// Fiber instance
-	app := fiber.New()
+	orderRepo := repository.NewOrderRepository()
+	orderService := service.NewOrderService(orderRepo)
+	orderController := controller.NewOrderController(orderService)
 
-	// Routes
-	app.Post("/users", userController.Create)
-	app.Get("/users", userController.GetAll)
+	app.Post("/users", userController.Create) // Tambah route POST untuk membuat user
+	app.Get("/users", userController.GetAll)  // Tambah route GET untuk mendapatkan semua user
 
-	// Run
-	log.Println("Server is running on http://localhost:3000")
+	app.Get("/orders", orderController.GetAll)  // Tambah route GET untuk mendapatkan semua order
+	app.Post("/orders", orderController.Create) // Tambah route POST untuk membuat order
+
+	log.Println("Server running at http://localhost:3000")
 	log.Fatal(app.Listen(":3000"))
 }

@@ -8,32 +8,38 @@ import (
 )
 
 type UserController struct {
-	UserService service.UserService
+	service service.UserService
 }
 
-func NewUserController(userService service.UserService) *UserController {
-	return &UserController{UserService: userService}
+func NewUserController(service service.UserService) *UserController {
+	return &UserController{service: service}
 }
 
 func (uc *UserController) Create(c *fiber.Ctx) error {
-	var user models.User
-	if err := c.BodyParser(&user); err != nil {
+	var req struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse JSON"})
 	}
 
-	createdUser, err := uc.UserService.CreateUser(c.Context(), user)
+	user := models.User{
+		Name:  req.Name,
+		Email: req.Email,
+	}
+
+	response, err := uc.service.CreateUser(c.Context(), user)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-
-	return c.Status(fiber.StatusCreated).JSON(createdUser)
+	return c.Status(fiber.StatusCreated).JSON(response)
 }
 
 func (uc *UserController) GetAll(c *fiber.Ctx) error {
-	users, err := uc.UserService.GetAllUsers(c.Context())
+	users, err := uc.service.GetAllUsers(c.Context())
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-
 	return c.JSON(users)
 }
