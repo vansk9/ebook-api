@@ -28,15 +28,16 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	userController := controller.NewUserController(userService)
 
-	orderRepo := repository.NewOrderRepository()
+	// Inisialisasi repository -> service -> controller
+	orderRepo := repository.NewOrderRepository(db.Conn)
 	orderService := service.NewOrderService(orderRepo)
 	orderController := controller.NewOrderController(orderService)
 
-	app.Post("/users", userController.Create) // Tambah route POST untuk membuat user
-	app.Get("/users", userController.GetAll)  // Tambah route GET untuk mendapatkan semua user
+	app.Post("/users", userController.Create)
+	app.Get("/users", userController.GetAll)
 
-	app.Get("/orders", orderController.GetAll)  // Tambah route GET untuk mendapatkan semua order
-	app.Post("/orders", orderController.Create) // Tambah route POST untuk membuat order
+	app.Get("/orders", orderController.GetAll)
+	app.Post("/orders", orderController.Create)
 
 	log.Println("Server running at http://localhost:3000")
 	log.Fatal(app.Listen(":3000"))

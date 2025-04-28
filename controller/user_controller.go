@@ -24,22 +24,54 @@ func (uc *UserController) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse JSON"})
 	}
 
+	// Membuat user model dari request
 	user := models.User{
 		Name:  req.Name,
 		Email: req.Email,
 	}
 
-	response, err := uc.service.CreateUser(c.Context(), user)
+	// Memanggil service untuk membuat user
+	createdUser, err := uc.service.CreateUser(c.Context(), user)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.Status(fiber.StatusCreated).JSON(response)
+
+	// Mapping data dari model User ke UserResponse
+	userResponse := models.UserResponse{
+		Success: true,
+		Message: "User Berhasil dibuat",
+		Data: models.UserData{
+			ID:    createdUser.ID,
+			Name:  createdUser.Name,
+			Email: createdUser.Email,
+		},
+	}
+
+	// Mengembalikan response yang sudah dimapping
+	return c.Status(fiber.StatusCreated).JSON(userResponse)
 }
 
 func (uc *UserController) GetAll(c *fiber.Ctx) error {
+	// Mendapatkan data user dari service
 	users, err := uc.service.GetAllUsers(c.Context())
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.JSON(users)
+
+	// Mapping data model User ke UserResponse
+	var userResponses []models.UserResponse
+	for _, user := range users {
+		userResponses = append(userResponses, models.UserResponse{
+			Success: true,
+			Message: "User ditemukan",
+			Data: models.UserData{
+				ID:    user.ID,
+				Name:  user.Name,
+				Email: user.Email,
+			},
+		})
+	}
+
+	// Mengembalikan response yang sudah dimapping
+	return c.JSON(userResponses)
 }

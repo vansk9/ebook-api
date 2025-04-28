@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"ebook-api/dto"
 	"ebook-api/models"
 	"ebook-api/service"
 
@@ -17,15 +18,32 @@ func NewOrderController(service service.OrderService) *OrderController {
 }
 
 func (ctrl *OrderController) Create(c *fiber.Ctx) error {
-	var order models.Order
+	var req dto.CreateOrderRequest
 
-	if err := c.BodyParser(&order); err != nil {
+	// Parse body sekali saja
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "cannot parse JSON",
+			"error": "cannot parse order JSON",
 		})
 	}
 
-	createdOrder, err := ctrl.service.CreateOrder(context.Background(), order)
+	// Mapping ke models
+	order := models.Order{
+		UserID:        req.UserID,
+		PaymentStatus: req.PaymentStatus,
+	}
+
+	var items []models.OrderItem
+	for _, itemReq := range req.Items {
+		items = append(items, models.OrderItem{
+			ProductName: itemReq.ProductName,
+			Quantity:    itemReq.Quantity,
+			Price:       itemReq.Price,
+			// TotalPrice dan CreatedAt akan dihitung di service
+		})
+	}
+
+	createdOrder, err := ctrl.service.CreateOrder(context.Background(), order, items)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
@@ -42,6 +60,5 @@ func (ctrl *OrderController) GetAll(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
-
 	return c.JSON(orders)
 }
